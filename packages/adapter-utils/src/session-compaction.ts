@@ -36,6 +36,16 @@ const ADAPTER_MANAGED_SESSION_POLICY: SessionCompactionPolicy = {
   maxSessionAgeHours: 0,
 };
 
+// Claude and Codex compact their own context, but a resumed session still
+// re-reads its whole history on every turn, so cached input grows without
+// bound. Rotate well before that dominates token use.
+const NATIVE_CONTEXT_ROTATION_POLICY: SessionCompactionPolicy = {
+  enabled: true,
+  maxSessionRuns: 10,
+  maxRawInputTokens: 500_000,
+  maxSessionAgeHours: 24,
+};
+
 export const LEGACY_SESSIONED_ADAPTER_TYPES = new Set([
   "claude_local",
   "codex_local",
@@ -53,12 +63,12 @@ export const ADAPTER_SESSION_MANAGEMENT: Record<string, AdapterSessionManagement
   claude_local: {
     supportsSessionResume: true,
     nativeContextManagement: "confirmed",
-    defaultSessionCompaction: ADAPTER_MANAGED_SESSION_POLICY,
+    defaultSessionCompaction: NATIVE_CONTEXT_ROTATION_POLICY,
   },
   codex_local: {
     supportsSessionResume: true,
     nativeContextManagement: "confirmed",
-    defaultSessionCompaction: ADAPTER_MANAGED_SESSION_POLICY,
+    defaultSessionCompaction: NATIVE_CONTEXT_ROTATION_POLICY,
   },
   cursor_cloud: {
     supportsSessionResume: true,
